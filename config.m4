@@ -15,8 +15,7 @@ dnl Otherwise use 'enable':
 PHP_ARG_ENABLE([var_representation],
   [whether to enable var_representation support],
   [AS_HELP_STRING([--enable-var_representation],
-    [Enable var_representation support])],
-  [no])
+    [Enable var_representation support])])
 
 if test "$PHP_VAR_REPRESENTATION" != "no"; then
   dnl Write more examples of tests here...
