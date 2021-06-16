@@ -1,0 +1,7 @@
+ARG_ENABLE('var_representation', 'var_representation support', 'no');
+
+if (PHP_VAR_REPRESENTATION != 'no') {
+	AC_DEFINE('HAVE_VAR_REPRESENTATION', 1, 'var_representation support enabled');
+
+	EXTENSION('var_representation', 'var_representation.c', null, '/DZEND_ENABLE_STATIC_TSRMLS_CACHE=1');
+}
