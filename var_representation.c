@@ -24,6 +24,9 @@
 #include "ext/standard/info.h"
 #include "php_var_representation.h"
 
+#if PHP_VERSION_ID >= 80100
+#include "zend_enum.h"
+#endif
 
 #ifndef ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE
 #define ZEND_ARG_TYPE_INFO_WITH_DEFAULT_VALUE(pass_by_ref, name, type_hint, allow_null, default_value) \
@@ -300,7 +303,20 @@ again:
 
 			break;
 		}
-		case IS_OBJECT:
+		case IS_OBJECT: {
+			zend_class_entry *ce = Z_OBJCE_P(struc);
+#if PHP_VERSION_ID >= 80100
+			if (ce->ce_flags & ZEND_ACC_ENUM) {
+				smart_str_appendc(buf, '\\');
+				smart_str_append(buf, ce->name);
+				zend_object *zobj = Z_OBJ_P(struc);
+				zval *case_name_zval = zend_enum_fetch_case_name(zobj);
+				smart_str_appendl(buf, "::", 2);
+				smart_str_append(buf, Z_STR_P(case_name_zval));
+				return;
+			}
+#endif
+
 			myht = zend_get_properties_for(struc, ZEND_PROP_PURPOSE_VAR_EXPORT);
 			if (myht) {
 				if (GC_IS_RECURSIVE(myht)) {
@@ -314,11 +330,11 @@ again:
 			}
 
 			/* stdClass has no __set_state method, but can be casted to */
-			if (Z_OBJCE_P(struc) == zend_standard_class_def) {
+			if (ce == zend_standard_class_def) {
 				smart_str_appendl(buf, "(object) [", 10);
 			} else {
 				smart_str_appendc(buf, '\\');
-				smart_str_append(buf, Z_OBJCE_P(struc)->name);
+				smart_str_append(buf, ce->name);
 				smart_str_appendl(buf, "::__set_state([", 15);
 			}
 
@@ -351,6 +367,7 @@ again:
 			}
 
 			break;
+		}
 		case IS_REFERENCE:
 			struc = Z_REFVAL_P(struc);
 			goto again;
