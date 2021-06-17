@@ -6,6 +6,8 @@ This extension adds a function
 `var_representation(mixed $value, int $flags = 0): string` to convert a
 variable to a string in a way that fixes the shortcomings of `var_export()`
 
+[![Build Status](https://github.com/TysonAndre/var_representation/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/TysonAndre/var_representation/actions/workflows/main.yml?query=branch%3Amain)
+
 ## Installation
 
 This extension requires php 7.4 or newer.
