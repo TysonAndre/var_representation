@@ -29,6 +29,7 @@
    <file name="config.m4" role="src" />
    <file name="config.w32" role="src" />
    <file name="var_representation.c" role="src" />
+   <file name="var_representation_arginfo.h" role="src" />
    <file name="php_var_representation.h" role="src" />
    <file name="README.md" role="doc" />
    <file name="COPYING" role="doc" />
