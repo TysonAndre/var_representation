@@ -219,7 +219,7 @@ static void php_array_element_var_representation(zval *zv, zend_ulong index, zen
 }
 /* }}} */
 
-PHPAPI void php_var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
+void php_var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
 {
 	HashTable *myht;
 	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
