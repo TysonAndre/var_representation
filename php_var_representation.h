@@ -16,10 +16,7 @@ extern zend_module_entry var_representation_module_entry;
 
 PHP_MINIT_FUNCTION(var_representation);
 
-extern zend_module_entry var_representation_module_entry;
-# define phpext_var_representation_ptr &var_representation_module_entry
-
-# define PHP_VAR_REPRESENTATION_VERSION "0.1.0"
+# define PHP_VAR_REPRESENTATION_VERSION "0.1.0dev"
 
 # if defined(ZTS) && defined(COMPILE_DL_VAR_REPRESENTATION)
 ZEND_TSRMLS_CACHE_EXTERN()
