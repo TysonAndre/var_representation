@@ -1,6 +1,7 @@
 tags
 *~
 *.tgz
+*.dep
 
 *.lo
 *.la
