@@ -10,7 +10,7 @@ variable to a string in a way that fixes the shortcomings of `var_export()`
 
 ## Installation
 
-This extension requires php 7.4 or newer.
+This extension requires php 7.2 or newer.
 
 ```
 phpize

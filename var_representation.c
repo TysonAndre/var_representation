@@ -13,8 +13,8 @@
 
 #include "php.h"
 
-#if PHP_VERSION_ID < 70400
-#error PHP versions prior to php 7.4 are not supported
+#if PHP_VERSION_ID < 70200
+#error PHP versions prior to php 7.2 are not supported
 #endif
 
 #include <ctype.h>
@@ -43,6 +43,18 @@
 	ZEND_PARSE_PARAMETERS_START(0, 0) \
 	ZEND_PARSE_PARAMETERS_END()
 #endif
+
+#if PHP_VERSION_ID < 70400
+#define zend_get_properties_for(struc, purpose) Z_OBJPROP_P((struc))
+
+#define zend_release_properties(ht) do {} while (0)
+#endif
+
+#if PHP_VERSION_ID < 70300
+#define zend_string_efree(s) zend_string_release((s))
+#define GC_ADDREF(p) (++GC_REFCOUNT((p)))
+#endif
+
 
 static const int VAR_REPRESENTATION_SINGLE_LINE = 1;
 
