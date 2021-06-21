@@ -50,13 +50,111 @@
 #define zend_release_properties(ht) do {} while (0)
 #endif
 
-#if PHP_VERSION_ID < 70300
-#define zend_string_efree(s) zend_string_release((s))
-#define GC_ADDREF(p) (++GC_REFCOUNT((p)))
+// php 7.2
+#ifndef ZEND_SET_ALIGNED
+#define ZEND_SET_ALIGNED(alignment, decl) decl
 #endif
 
-
 static const int VAR_REPRESENTATION_SINGLE_LINE = 1;
+
+#if PHP_VERSION_ID < 70300
+
+// #define zend_string_efree(s) zend_string_release((s))
+#define GC_ADDREF(p) (++GC_REFCOUNT((p)))
+#define GC_TRY_PROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount++; } while(0)
+#define GC_TRY_UNPROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount--; } while(0)
+#define GC_IS_RECURSIVE(myht) ((myht)->u.v.nApplyCount > 0)
+
+/* {{{ php_charmask
+ * Fills a 256-byte bytemask with input. You can specify a range like 'a..z',
+ * it needs to be incrementing.
+ * Returns: FAILURE/SUCCESS whether the input was correct (i.e. no range errors)
+ * Copied from php_charmask in php-src/ext/standard/string.c for compatibility
+ */
+static inline int php_charmask(const unsigned char *input, size_t len, char *mask)
+{
+	const unsigned char *end;
+	unsigned char c;
+	int result = SUCCESS;
+
+	memset(mask, 0, 256);
+	for (end = input+len; input < end; input++) {
+		c=*input;
+		if ((input+3 < end) && input[1] == '.' && input[2] == '.'
+				&& input[3] >= c) {
+			memset(mask+c, 1, input[3] - c + 1);
+			input+=3;
+		} else if ((input+1 < end) && input[0] == '.' && input[1] == '.') {
+			/* Error, try to be as helpful as possible:
+			   (a range ending/starting with '.' won't be captured here) */
+			if (end-len >= input) { /* there was no 'left' char */
+				php_error_docref(NULL, E_WARNING, "Invalid '..'-range, no character to the left of '..'");
+				result = FAILURE;
+				continue;
+			}
+			if (input+2 >= end) { /* there is no 'right' char */
+				php_error_docref(NULL, E_WARNING, "Invalid '..'-range, no character to the right of '..'");
+				result = FAILURE;
+				continue;
+			}
+			if (input[-1] > input[2]) { /* wrong order */
+				php_error_docref(NULL, E_WARNING, "Invalid '..'-range, '..'-range needs to be incrementing");
+				result = FAILURE;
+				continue;
+			}
+			/* FIXME: better error (a..b..c is the only left possibility?) */
+			php_error_docref(NULL, E_WARNING, "Invalid '..'-range");
+			result = FAILURE;
+			continue;
+		} else {
+			mask[c]=1;
+		}
+	}
+	return result;
+}
+/* }}} */
+// Copied from php-src php_addcslashes_str from php 7.3 for a tiny performance boost over var_representation_addcslashes
+static zend_string *var_representation_addcslashes_str(const char *str, size_t len, const char *what, size_t wlength)
+{
+	char flags[256];
+	char *target;
+	const char *source, *end;
+	char c;
+	size_t  newlen;
+	zend_string *new_str = zend_string_safe_alloc(4, len, 0, 0);
+
+	php_charmask((unsigned char *)what, wlength, flags);
+
+	for (source = str, end = source + len, target = ZSTR_VAL(new_str); source < end; source++) {
+		c = *source;
+		if (flags[(unsigned char)c]) {
+			if ((unsigned char) c < 32 || (unsigned char) c > 126) {
+				*target++ = '\\';
+				switch (c) {
+					case '\n': *target++ = 'n'; break;
+					case '\t': *target++ = 't'; break;
+					case '\r': *target++ = 'r'; break;
+					case '\a': *target++ = 'a'; break;
+					case '\v': *target++ = 'v'; break;
+					case '\b': *target++ = 'b'; break;
+					case '\f': *target++ = 'f'; break;
+					default: target += sprintf(target, "%03o", (unsigned char) c);
+				}
+				continue;
+			}
+			*target++ = '\\';
+		}
+		*target++ = c;
+	}
+	*target = 0;
+	newlen = target - ZSTR_VAL(new_str);
+	if (newlen < len * 4) {
+		new_str = zend_string_truncate(new_str, newlen, 0);
+	}
+	return new_str;
+}
+#define php_addcslashes_str var_representation_addcslashes_str
+#endif
 
 /* Based on zend_array_is_list */
 /* Check if an array is a list */
@@ -95,7 +193,7 @@ static zend_always_inline zend_bool var_representation_array_is_list(zend_array 
 		efree(tmp_spaces); \
 	} while(0);
 
-static zend_string* php_var_representation_string_double_quotes(const char *str, size_t len) { /* {{{ */
+static zend_string* var_representation_string_double_quotes(const char *str, size_t len) { /* {{{ */
 	/* NOTE: This needs to be thread safe, which is why I gave up and used a constant */
 	/* '\1'(0x01) means to use the hexadecimal representation, others mean to use a backslash followed by that character */
 	static const char lookup[256] = {
@@ -146,7 +244,7 @@ static zend_string* php_var_representation_string_double_quotes(const char *str,
 /* }}} */
 
 
-static void php_var_representation_string(smart_str *buf, const char *str, size_t len) /* {{{ */
+static void var_representation_string(smart_str *buf, const char *str, size_t len) /* {{{ */
 {
 	for (size_t i = 0; i < len; i++) {
 		const unsigned char c = (unsigned char)str[i];
@@ -154,7 +252,7 @@ static void php_var_representation_string(smart_str *buf, const char *str, size_
 		if (c < 0x20 || c == 0x7f) {
 			/* This needs to escape the previously scanned characters because this didn't check for $ and \\ */
 			smart_str_appendc(buf, '"');
-			zend_string *ztmp = php_var_representation_string_double_quotes(str, len);
+			zend_string *ztmp = var_representation_string_double_quotes(str, len);
 			smart_str_append(buf, ztmp);
 			smart_str_appendc(buf, '"');
 			zend_string_free(ztmp);
@@ -186,14 +284,14 @@ static void php_object_element_var_representation(zval *zv, zend_ulong index, ze
 			size_t prop_name_len;
 
 			zend_unmangle_property_name_ex(key, &class_name, &prop_name, &prop_name_len);
-			php_var_representation_string(buf, prop_name, prop_name_len);
+			var_representation_string(buf, prop_name, prop_name_len);
 		} else {
 			smart_str_append_long(buf, (zend_long) index);
 		}
 		smart_str_appendl(buf, " => ", 4);
 	}
 
-	php_var_representation_ex(zv, multiline ? level + 2 : -1, buf);
+	var_representation_ex(zv, multiline ? level + 2 : -1, buf);
 	if (multiline) {
 		smart_str_appendc(buf, ',');
 		smart_str_appendc(buf, '\n');
@@ -219,10 +317,10 @@ static void php_array_element_var_representation(zval *zv, zend_ulong index, zen
 			buffer_append_spaces(buf, level+1);
 		}
 
-		php_var_representation_string(buf, ZSTR_VAL(key), ZSTR_LEN(key));
+		var_representation_string(buf, ZSTR_VAL(key), ZSTR_LEN(key));
 		smart_str_appendl(buf, " => ", 4);
 	}
-	php_var_representation_ex(zv, multiline ? level + 2 : -1, buf);
+	var_representation_ex(zv, multiline ? level + 2 : -1, buf);
 
 	if (multiline) {
 		smart_str_appendc(buf, ',');
@@ -231,7 +329,7 @@ static void php_array_element_var_representation(zval *zv, zend_ulong index, zen
 }
 /* }}} */
 
-void php_var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
+void var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
 {
 	HashTable *myht;
 	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
@@ -275,10 +373,11 @@ again:
 			}
 			break;
 		case IS_STRING:
-			php_var_representation_string(buf, Z_STRVAL_P(struc), Z_STRLEN_P(struc));
+			var_representation_string(buf, Z_STRVAL_P(struc), Z_STRLEN_P(struc));
 			break;
 		case IS_ARRAY: {
 			myht = Z_ARRVAL_P(struc);
+#if PHP_VERSION_ID >= 70300
 			if (!(GC_FLAGS(myht) & GC_IMMUTABLE)) {
 				if (GC_IS_RECURSIVE(myht)) {
 					smart_str_appendl(buf, "null", 4);
@@ -288,6 +387,14 @@ again:
 				GC_ADDREF(myht);
 				GC_PROTECT_RECURSION(myht);
 			}
+#else
+			if (ZEND_HASH_APPLY_PROTECTION(myht) && myht->u.v.nApplyCount++ > 0) {
+				myht->u.v.nApplyCount--;
+				smart_str_appendl(buf, "null", 4);
+				zend_error(E_WARNING, "var_representation does not handle circular references");
+				return;
+			}
+#endif
 			smart_str_appendc(buf, '[');
 			first = 1;
 			is_list = var_representation_array_is_list(myht);
@@ -304,10 +411,17 @@ again:
 				}
 				php_array_element_var_representation(val, index, key, level, buf, is_list);
 			} ZEND_HASH_FOREACH_END();
+#if PHP_VERSION_ID >= 70300
 			if (!(GC_FLAGS(myht) & GC_IMMUTABLE)) {
 				GC_UNPROTECT_RECURSION(myht);
 				GC_DELREF(myht);
 			}
+#else
+			if (ZEND_HASH_APPLY_PROTECTION(myht)) {
+				myht->u.v.nApplyCount--;
+			}
+#endif
+
 			if (level > 1 && !first) {
 				buffer_append_spaces(buf, level - 1);
 			}
@@ -331,7 +445,8 @@ again:
 
 			myht = zend_get_properties_for(struc, ZEND_PROP_PURPOSE_VAR_EXPORT);
 			if (myht) {
-				if (GC_IS_RECURSIVE(myht)) {
+				if (GC_IS_RECURSIVE(myht))
+				{
 					smart_str_appendl(buf, "null", 4);
 					zend_error(E_WARNING, "var_representation does not handle circular references");
 					zend_release_properties(myht);
@@ -442,7 +557,7 @@ PHP_FUNCTION(var_representation)
 		Z_PARAM_LONG(flags)
 	ZEND_PARSE_PARAMETERS_END();
 
-	php_var_representation_ex(var, (flags & 1) ? -1 : 1, &buf);
+	var_representation_ex(var, (flags & 1) ? -1 : 1, &buf);
 	smart_str_0 (&buf);
 
 	RETURN_NEW_STR(buf.s);

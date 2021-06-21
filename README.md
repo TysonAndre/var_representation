@@ -15,6 +15,7 @@ This extension requires php 7.2 or newer.
 ```
 phpize
 ./configure
+# make test # is suggested
 make install
 ```
 
