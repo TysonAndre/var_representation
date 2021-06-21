@@ -7,6 +7,7 @@ This extension adds a function
 variable to a string in a way that fixes the shortcomings of `var_export()`
 
 [![Build Status](https://github.com/TysonAndre/var_representation/actions/workflows/main.yml/badge.svg?branch=main)](https://github.com/TysonAndre/var_representation/actions/workflows/main.yml?query=branch%3Amain)
+[![Build Status (Windows)](https://ci.appveyor.com/api/projects/status/9gq4nk1cwmgn88ye?svg=true)](https://ci.appveyor.com/project/TysonAndre/var-representation)
 
 ## Installation
 
