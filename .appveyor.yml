@@ -132,7 +132,7 @@ build_script:
                 echo "set REPORT_EXIT_STATUS=1" | Out-File -Encoding "ASCII" -Append task.bat
                 echo "set NO_INTERACTION=1" | Out-File -Encoding "ASCII" -Append task.bat
                 # Configure this to use two worker processes (same as appveyor core count?) to run tests
-                echo "set TEST_PHP_ARGS=--show-diff -j2" | Out-File -Encoding "ASCII" -Append task.bat
+                echo "set TEST_PHP_ARGS=--show-diff" | Out-File -Encoding "ASCII" -Append task.bat
                 $cmd = 'set TEST_PHP_EXECUTABLE=c:\build-cache\' + $dname + '\php.exe'
                 echo $cmd | Out-File -Encoding "ASCII" -Append task.bat
                 echo "nmake /nologo 2>&1" | Out-File -Encoding "ASCII" -Append task.bat
