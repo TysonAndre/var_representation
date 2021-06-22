@@ -525,6 +525,7 @@ PHP_MINFO_FUNCTION(var_representation)
 {
 	php_info_print_table_start();
 	php_info_print_table_header(2, "var_representation support", "enabled");
+	php_info_print_table_row(2, "var_representation version", PHP_VAR_REPRESENTATION_VERSION);
 	php_info_print_table_end();
 }
 /* }}} */
