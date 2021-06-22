@@ -74,4 +74,3 @@ Proposals to add alternatives better to var_export to php itself
   optional parameter `int $flags = 0` accepting a bitmask. If the
   value of $flags includes this flags, `var_representation()` will
   return a single-line representation for arrays/objects.
-```
