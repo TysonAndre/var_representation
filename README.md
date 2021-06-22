@@ -13,7 +13,7 @@ variable to a string in a way that fixes the shortcomings of `var_export()`
 
 This extension requires php 7.2 or newer.
 
-```
+```sh
 phpize
 ./configure
 # make test # is suggested
@@ -24,13 +24,15 @@ On windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 ins
 
 ## Usage
 
-```
-php > echo var_representation(['a','b']);  // uses short arrays, and omits array keys if array_is_list() would be true
+```php
+// uses short arrays, and omits array keys if array_is_list() would be true
+php > echo var_representation(['a','b']);
 [
   'a',
   'b',
 ]
-php > echo var_representation(['a', 'b', 'c'], VAR_REPRESENTATION_SINGLE_LINE);  // can dump everything on one line.
+// can dump everything on one line.
+php > echo var_representation(['a', 'b', 'c'], VAR_REPRESENTATION_SINGLE_LINE);
 ['a', 'b', 'c']
 php > echo var_representation("uses double quotes: \$\"'\\\n");
 "uses double quotes: \$\"'\\\n"
@@ -59,7 +61,7 @@ Proposals to add alternatives better to var_export to php itself
 - Use `null` instead of `NULL` - the former is recommended by more
   coding guidelines [such as PSR-2](https://www.php-fig.org/psr/psr-2/).
 - Escape control characters including tabs, newlines, etc., unlike
-  var\_export()/var\_dump().
+  `var_export()`/`var_dump()`.
 
 - Change the way indentation is done for arrays/objects. Always add 2
   spaces for every level of arrays, never 3 in objects, and put the
