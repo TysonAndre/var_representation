@@ -1,0 +1,12 @@
+* Update version in php_var_representation.h to remove dev suffix.
+* Update version, release date in package.xml.
+* Run `phpize; ./configure; make clean test`.
+* Run `pecl package package.xml`.
+* Run `pecl install var_representation-XXX.tgz`.
+* Commit.
+* Create a release.
+* Bump version in php_var_representation.h and add dev suffix.
+* Copy release in package.xml into changelog.
+* Clear current changelog, bump versions and add dev suffix.
+* Commit.
+* Upload package on pecl.php.net.
