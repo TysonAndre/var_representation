@@ -13,8 +13,8 @@
  <date>2021-06-22</date>
  <time>16:00:00</time>
  <version>
-  <release>0.1.0RC1</release>
-  <api>0.1.0RC1</api>
+  <release>0.1.0dev</release>
+  <api>0.1.0dev</api>
  </version>
  <stability>
   <release>beta</release>
@@ -22,7 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Initial commit
+* TBD
  </notes>
  <contents>
   <dir name="/">
@@ -58,5 +58,22 @@
  <providesextension>var_representation</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2021-06-22</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.1.0RC1</release>
+    <api>0.1.0RC1</api>
+   </version>
+   <stability>
+    <release>beta</release>
+    <api>beta</api>
+   </stability>
+   <license uri="http://opensource.dynamoid.com/#license">PHP like license</license>
+   <notes>
+* Initial commit
+   </notes>
+   <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
+  </release>
  </changelog>
 </package>
