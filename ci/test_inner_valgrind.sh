@@ -6,6 +6,7 @@ set -xeu
 echo "Run tests in docker"
 php --version
 php --ini
-REPORT_EXIT_STATUS=1 make test TESTS="-P -q --show-diff -m --show-mem"
+cp ci/run-tests-parallel.php run-tests.php
+REPORT_EXIT_STATUS=1 make test TESTS="-j$(nproc) -P -q --show-diff -m --show-mem"
 echo "Test that package.xml is valid"
 pecl package
