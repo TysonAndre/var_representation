@@ -2,11 +2,7 @@
 Test var_representation() function with internal classes
 --FILE--
 <?php
-function dump($value): void {
-    echo var_representation($value), "\n";
-    $output = var_representation($value, VAR_REPRESENTATION_SINGLE_LINE);
-    echo "oneline: $output\n";
-}
+require_once __DIR__ . '/dump.inc';
 dump(new ArrayObject([]));
 // use strtolower because it is locale dependent and creates temporary strings instead of constants
 dump(new ArrayObject(['first', strtolower('SECOND')]));

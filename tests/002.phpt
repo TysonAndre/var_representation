@@ -2,11 +2,7 @@
 Test var_representation() function
 --FILE--
 <?php
-function dump($value): void {
-    echo var_representation($value), "\n";
-    $output = var_representation($value, VAR_REPRESENTATION_SINGLE_LINE);
-    echo "oneline: $output\n";
-}
+require_once __DIR__ . '/dump.inc';
 dump(null);
 dump(false);
 dump(true);

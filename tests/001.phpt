@@ -4,11 +4,7 @@ Test var_representation() function (PHP 7.4+)
 <?php if (PHP_VERSION_ID < 70400) { echo "skip requires php 7.4+"; } ?>
 --FILE--
 <?php
-function dump($value): void {
-    echo var_representation($value), "\n";
-    $output = var_representation($value, VAR_REPRESENTATION_SINGLE_LINE);
-    echo "oneline: $output\n";
-}
+require_once __DIR__ . '/dump.inc';
 class Example {
     public $untyped1;
     public $untyped2 = null;
