@@ -22,13 +22,15 @@
  </stability>
  <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* TBD
+* Fix handling of dumping arrays created from $GLOBALS in php versions prior to 8.1
+* Move the C var_representation_ex API to var_representation.h
  </notes>
  <contents>
   <dir name="/">
    <file name="config.m4" role="src" />
    <file name="config.w32" role="src" />
    <file name="var_representation.c" role="src" />
+   <file name="var_representation.h" role="src" />
    <file name="var_representation.stub.php" role="src" />
    <file name="var_representation_arginfo.h" role="src" />
    <file name="php_var_representation.h" role="src" />
@@ -40,6 +42,7 @@
     <file name="002.phpt" role="test" />
     <file name="003.phpt" role="test" />
     <file name="004.phpt" role="test" />
+    <file name="005.phpt" role="test" />
     <file name="dump.inc" role="test" />
     <file name="php81.phpt" role="test" />
    </dir>

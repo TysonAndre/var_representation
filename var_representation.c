@@ -23,6 +23,7 @@
 #include "ext/standard/php_string.h"
 #include "ext/standard/info.h"
 #include "php_var_representation.h"
+#include "var_representation.h"
 
 #if PHP_VERSION_ID >= 80100
 #include "zend_enum.h"
@@ -84,29 +85,8 @@ static inline int php_charmask(const unsigned char *input, size_t len, char *mas
 				&& input[3] >= c) {
 			memset(mask+c, 1, input[3] - c + 1);
 			input+=3;
-		} else if ((input+1 < end) && input[0] == '.' && input[1] == '.') {
-			/* Error, try to be as helpful as possible:
-			   (a range ending/starting with '.' won't be captured here) */
-			if (end-len >= input) { /* there was no 'left' char */
-				php_error_docref(NULL, E_WARNING, "Invalid '..'-range, no character to the left of '..'");
-				result = FAILURE;
-				continue;
-			}
-			if (input+2 >= end) { /* there is no 'right' char */
-				php_error_docref(NULL, E_WARNING, "Invalid '..'-range, no character to the right of '..'");
-				result = FAILURE;
-				continue;
-			}
-			if (input[-1] > input[2]) { /* wrong order */
-				php_error_docref(NULL, E_WARNING, "Invalid '..'-range, '..'-range needs to be incrementing");
-				result = FAILURE;
-				continue;
-			}
-			/* FIXME: better error (a..b..c is the only left possibility?) */
-			php_error_docref(NULL, E_WARNING, "Invalid '..'-range");
-			result = FAILURE;
-			continue;
 		} else {
+			ZEND_ASSERT(!((input+1 < end) && input[0] == '.' && input[1] == '.'));
 			mask[c]=1;
 		}
 	}
@@ -270,7 +250,7 @@ static void var_representation_string(smart_str *buf, const char *str, size_t le
 }
 /* }}} */
 
-static void php_object_element_var_representation(zval *zv, zend_ulong index, zend_string *key, int level, smart_str *buf, zend_bool is_list) /* {{{ */
+static void var_representation_encode_object_element(zval *zv, zend_ulong index, zend_string *key, int level, smart_str *buf, zend_bool is_list) /* {{{ */
 {
 	zend_bool multiline = level >= 0;
 	if (multiline) {
@@ -299,7 +279,7 @@ static void php_object_element_var_representation(zval *zv, zend_ulong index, ze
 }
 /* }}} */
 
-static void php_array_element_var_representation(zval *zv, zend_ulong index, zend_string *key, int level, smart_str *buf, zend_bool is_list) /* {{{ */
+static void var_representation_encode_array_element(zval *zv, zend_ulong index, zend_string *key, int level, smart_str *buf, zend_bool is_list) /* {{{ */
 {
 	zend_bool multiline = level >= 0;
 	if (key == NULL) { /* numeric key */
@@ -329,7 +309,7 @@ static void php_array_element_var_representation(zval *zv, zend_ulong index, zen
 }
 /* }}} */
 
-void var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
+VAR_REPRESENTATION_API void var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
 {
 	HashTable *myht;
 	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
@@ -398,7 +378,13 @@ again:
 			smart_str_appendc(buf, '[');
 			first = 1;
 			is_list = var_representation_array_is_list(myht);
-			ZEND_HASH_FOREACH_KEY_VAL(myht, index, key, val) {
+#if PHP_VERSION_ID < 80100
+			ZEND_HASH_FOREACH_KEY_VAL_IND(myht, index, key, val)
+#else
+			ZEND_HASH_FOREACH_KEY_VAL(myht, index, key, val)
+#endif
+			{
+				ZEND_ASSERT(Z_TYPE_P(val) != IS_INDIRECT);
 				if (level < 0) {
 					if (first) {
 						first = 0;
@@ -409,7 +395,7 @@ again:
 					smart_str_appendc(buf, '\n');
 					first = 0;
 				}
-				php_array_element_var_representation(val, index, key, level, buf, is_list);
+				var_representation_encode_array_element(val, index, key, level, buf, is_list);
 			} ZEND_HASH_FOREACH_END();
 #if PHP_VERSION_ID >= 70300
 			if (!(GC_FLAGS(myht) & GC_IMMUTABLE)) {
@@ -479,7 +465,7 @@ again:
 						smart_str_appendc(buf, '\n');
 						first = 0;
 					}
-					php_object_element_var_representation(val, index, key, level, buf, is_list);
+					var_representation_encode_object_element(val, index, key, level, buf, is_list);
 				} ZEND_HASH_FOREACH_END();
 				GC_TRY_UNPROTECT_RECURSION(myht);
 				zend_release_properties(myht);
@@ -503,6 +489,7 @@ again:
 			zend_error(E_WARNING, "var_representation does not handle resources");
 			/* fall through */
 		default:
+			ZEND_ASSERT(Z_TYPE_P(struc) == IS_RESOURCE);
 			smart_str_appendl(buf, "null", 4);
 			break;
 	}

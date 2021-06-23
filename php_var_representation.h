@@ -22,6 +22,4 @@ PHP_MINIT_FUNCTION(var_representation);
 ZEND_TSRMLS_CACHE_EXTERN()
 # endif
 
-PHPAPI void var_representation_ex(zval *struc, int level, smart_str *buf);
-
 #endif	/* PHP_VAR_REPRESENTATION_H */
