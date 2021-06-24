@@ -114,9 +114,7 @@ static zend_string *var_representation_addcslashes_str(const char *str, size_t l
 					case '\n': *target++ = 'n'; break;
 					case '\t': *target++ = 't'; break;
 					case '\r': *target++ = 'r'; break;
-					case '\a': *target++ = 'a'; break;
 					case '\v': *target++ = 'v'; break;
-					case '\b': *target++ = 'b'; break;
 					case '\f': *target++ = 'f'; break;
 					default: target += sprintf(target, "%03o", (unsigned char) c);
 				}
