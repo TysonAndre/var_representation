@@ -65,76 +65,22 @@ static const int VAR_REPRESENTATION_SINGLE_LINE = 1;
 #define GC_TRY_PROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount++; } while(0)
 #define GC_TRY_UNPROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount--; } while(0)
 #define GC_IS_RECURSIVE(myht) ((myht)->u.v.nApplyCount > 0)
+#endif
 
-/* {{{ php_charmask
- * Fills a 256-byte bytemask with input. You can specify a range like 'a..z',
- * it needs to be incrementing.
- * Returns: FAILURE/SUCCESS whether the input was correct (i.e. no range errors)
- * Copied from php_charmask in php-src/ext/standard/string.c for compatibility
- */
-static inline int php_charmask(const unsigned char *input, size_t len, char *mask)
+static char *var_representation_add_single_quoted_string_inner_to_buffer(char *target, const char *str, size_t len)
 {
-	const unsigned char *end;
-	unsigned char c;
-	int result = SUCCESS;
-
-	memset(mask, 0, 256);
-	for (end = input+len; input < end; input++) {
-		c=*input;
-		if ((input+3 < end) && input[1] == '.' && input[2] == '.'
-				&& input[3] >= c) {
-			memset(mask+c, 1, input[3] - c + 1);
-			input+=3;
-		} else {
-			ZEND_ASSERT(!((input+1 < end) && input[0] == '.' && input[1] == '.'));
-			mask[c]=1;
-		}
-	}
-	return result;
-}
-/* }}} */
-// Copied from php-src php_addcslashes_str from php 7.3 for a tiny performance boost over var_representation_addcslashes
-static zend_string *var_representation_addcslashes_str(const char *str, size_t len, const char *what, size_t wlength)
-{
-	char flags[256];
-	char *target;
 	const char *source, *end;
 	char c;
-	size_t  newlen;
-	zend_string *new_str = zend_string_safe_alloc(4, len, 0, 0);
 
-	php_charmask((unsigned char *)what, wlength, flags);
-
-	for (source = str, end = source + len, target = ZSTR_VAL(new_str); source < end; source++) {
+	for (source = str, end = source + len; source < end; source++) {
 		c = *source;
-		if (flags[(unsigned char)c]) {
-			if ((unsigned char) c < 32 || (unsigned char) c > 126) {
-				*target++ = '\\';
-				switch (c) {
-					case '\n': *target++ = 'n'; break;
-					case '\t': *target++ = 't'; break;
-					case '\r': *target++ = 'r'; break;
-					case '\a': *target++ = 'a'; break;
-					case '\v': *target++ = 'v'; break;
-					case '\b': *target++ = 'b'; break;
-					case '\f': *target++ = 'f'; break;
-					default: target += sprintf(target, "%03o", (unsigned char) c);
-				}
-				continue;
-			}
+		if (c == '\\' || c == '\'') {
 			*target++ = '\\';
 		}
 		*target++ = c;
 	}
-	*target = 0;
-	newlen = target - ZSTR_VAL(new_str);
-	if (newlen < len * 4) {
-		new_str = zend_string_truncate(new_str, newlen, 0);
-	}
-	return new_str;
+	return target;
 }
-#define php_addcslashes_str var_representation_addcslashes_str
-#endif
 
 /* Based on zend_array_is_list */
 /* Check if an array is a list */
@@ -240,13 +186,16 @@ static void var_representation_string(smart_str *buf, const char *str, size_t le
 		}
 	}
 	/* guaranteed not to have '\0' characters at this point. */
-	zend_string *ztmp = php_addcslashes_str(str, len, "'\\", 2);
 
-	smart_str_appendc(buf, '\'');
-	smart_str_append(buf, ztmp);
-	smart_str_appendc(buf, '\'');
-
-	zend_string_free(ztmp);
+	// '\\' and '\'' are 2 characters long. "'\\'" is the worst case.
+	smart_str_alloc(buf, 2 + len * 2, 0);
+	char *const start = ZSTR_VAL(buf->s);
+	char *dest = start + ZSTR_LEN(buf->s);
+	*dest++ = '\'';
+	dest = var_representation_add_single_quoted_string_inner_to_buffer(dest, str, len);
+	*dest++ = '\'';
+	ZEND_ASSERT(dest - start <= buf->a);
+	ZSTR_LEN(buf->s) = dest - start;
 }
 /* }}} */
 

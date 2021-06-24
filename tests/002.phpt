@@ -44,6 +44,8 @@ class Example {
 $x = new Example();
 unset($x->untyped1);  // unset properties/uninitialized typed properties are not shown, like var_export
 dump($x);
+dump("'");
+dump("\\\\\\\\\\\\");
 ?>
 --EXPECTF--
 null
@@ -133,3 +135,7 @@ oneline: [(object) ['key' => (object) ['inner' => [1.0]], 'other' => 'ref shown 
   'untyped3' => 3,
 ])
 oneline: \Example::__set_state(['untyped2' => null, 'untyped3' => 3])
+'\''
+oneline: '\''
+'\\\\\\\\\\\\'
+oneline: '\\\\\\\\\\\\'
