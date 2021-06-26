@@ -14,13 +14,15 @@ variable to a string in a way that fixes the shortcomings of `var_export()`
 This extension requires php 7.2 or newer.
 
 ```sh
-phpize
-./configure
-# make test # is suggested
-make install
+pecl install var_representation
 ```
 
 On windows, see https://wiki.php.net/internals/windows/stepbystepbuild_sdk_2 instead
+
+## Polyfill
+
+`composer.phar require tysonandre/var_representation_polyfill` can be used to install a less efficient polyfill:
+https://packagist.org/packages/TysonAndre/var_representation_polyfill
 
 ## Usage
 
