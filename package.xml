@@ -13,8 +13,8 @@
  <date>2021-08-14</date>
  <time>16:00:00</time>
  <version>
-  <release>0.1.1</release>
-  <api>0.1.1</api>
+  <release>0.1.2dev</release>
+  <api>0.1.2dev</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,10 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* Optimize escaping single quoted strings
-* Add a new flag VAR_REPRESENTATION_UNESCAPED to always encode strings as single quoted strings without escaping control characters.
-  This may be useful when the result of var_representation is escaped again before being rendered (e.g. json encoding),
-  or when a short representation is desired.
+* TBD
  </notes>
  <contents>
   <dir name="/">
@@ -64,6 +61,25 @@
  <providesextension>var_representation</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2021-08-14</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.1.1</release>
+    <api>0.1.1</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* Optimize escaping single quoted strings
+* Add a new flag VAR_REPRESENTATION_UNESCAPED to always encode strings as single quoted strings without escaping control characters.
+  This may be useful when the result of var_representation is escaped again before being rendered (e.g. json encoding),
+  or when a short representation is desired.
+   </notes>
+  </release>
   <release>
    <date>2021-06-24</date>
    <time>16:00:00</time>

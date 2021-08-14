@@ -73,7 +73,7 @@ Proposals to add alternatives better to var_export to php itself
 
 ## Differences from var_export
 
-- Unconditionally return a string instead of printing to standard output.`
+- Unconditionally return a string instead of printing to standard output.
 - Use `null` instead of `NULL` - the former is recommended by more
   coding guidelines [such as PSR-2](https://www.php-fig.org/psr/psr-2/).
 - Escape control characters including tabs, newlines, etc., unlike
@@ -92,7 +92,7 @@ Proposals to add alternatives better to var_export to php itself
   return a single-line representation for arrays/objects.
 - Support the bit flag `VAR_REPRESENTATION_UNESCAPED` to force
   strings to be single quoted and avoid escaping any control characters other than `'` and `\`
-  (e.g. newlines will not be escaped even with VAR_REPRESENTATION_SINGLE_LINE).
+  (e.g. newlines will not be escaped even with `VAR_REPRESENTATION_SINGLE_LINE`).
 
   This may be useful when short representations are needed,
   or if the return value is escaped again.
