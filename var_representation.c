@@ -18,6 +18,7 @@
 #endif
 
 #include <ctype.h>
+#include <stdbool.h>
 #include "zend_types.h"
 #include "zend_smart_str.h"
 #include "ext/standard/php_string.h"
@@ -57,6 +58,7 @@
 #endif
 
 static const int VAR_REPRESENTATION_SINGLE_LINE = 1;
+static const int VAR_REPRESENTATION_UNESCAPED = 2;
 
 #if PHP_VERSION_ID < 70300
 
@@ -66,6 +68,8 @@ static const int VAR_REPRESENTATION_SINGLE_LINE = 1;
 #define GC_TRY_UNPROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount--; } while(0)
 #define GC_IS_RECURSIVE(myht) ((myht)->u.v.nApplyCount > 0)
 #endif
+
+static void var_representation_ex_inner(zval *struc, int level, bool unescaped, smart_str *buf);
 
 static char *var_representation_add_single_quoted_string_inner_to_buffer(char *target, const char *str, size_t len)
 {
@@ -169,23 +173,25 @@ static zend_string* var_representation_string_double_quotes(const char *str, siz
 }
 /* }}} */
 
-
-static void var_representation_string(smart_str *buf, const char *str, size_t len) /* {{{ */
+static void var_representation_string(smart_str *buf, const char *str, size_t len, bool unescaped) /* {{{ */
 {
-	for (size_t i = 0; i < len; i++) {
-		const unsigned char c = (unsigned char)str[i];
-		/* escape using double quotes if the string contains control characters such as newline/tab and backspaces(\x7f) */
-		if (c < 0x20 || c == 0x7f) {
-			/* This needs to escape the previously scanned characters because this didn't check for $ and \\ */
-			smart_str_appendc(buf, '"');
-			zend_string *ztmp = var_representation_string_double_quotes(str, len);
-			smart_str_append(buf, ztmp);
-			smart_str_appendc(buf, '"');
-			zend_string_free(ztmp);
-			return;
+	if (!unescaped) {
+		for (size_t i = 0; i < len; i++) {
+			const unsigned char c = (unsigned char)str[i];
+			/* escape using double quotes if the string contains control characters such as newline/tab and backspaces(\x7f) */
+			if (c < 0x20 || c == 0x7f) {
+				/* This needs to escape the previously scanned characters because this didn't check for $ and \\ */
+				smart_str_appendc(buf, '"');
+				zend_string *ztmp = var_representation_string_double_quotes(str, len);
+				smart_str_append(buf, ztmp);
+				smart_str_appendc(buf, '"');
+				zend_string_free(ztmp);
+				return;
+			}
 		}
 	}
-	/* guaranteed not to have '\0' characters at this point. */
+	/* If unescaped, then '\0' characters won't be escaped. */
+	/* If escaped, then this is guaranteed not to have '\0' characters at this point. */
 
 	// '\\' and '\'' are 2 characters long. "'\\'" is the worst case.
 	smart_str_alloc(buf, 2 + len * 2, 0);
@@ -199,7 +205,7 @@ static void var_representation_string(smart_str *buf, const char *str, size_t le
 }
 /* }}} */
 
-static void var_representation_encode_object_element(zval *zv, zend_ulong index, zend_string *key, int level, smart_str *buf, zend_bool is_list) /* {{{ */
+static void var_representation_encode_object_element(zval *zv, zend_ulong index, zend_string *key, int level, bool unescaped, smart_str *buf, zend_bool is_list) /* {{{ */
 {
 	zend_bool multiline = level >= 0;
 	if (multiline) {
@@ -213,14 +219,14 @@ static void var_representation_encode_object_element(zval *zv, zend_ulong index,
 			size_t prop_name_len;
 
 			zend_unmangle_property_name_ex(key, &class_name, &prop_name, &prop_name_len);
-			var_representation_string(buf, prop_name, prop_name_len);
+			var_representation_string(buf, prop_name, prop_name_len, unescaped);
 		} else {
 			smart_str_append_long(buf, (zend_long) index);
 		}
 		smart_str_appendl(buf, " => ", 4);
 	}
 
-	var_representation_ex(zv, multiline ? level + 2 : -1, buf);
+	var_representation_ex_inner(zv, multiline ? level + 2 : -1, unescaped, buf);
 	if (multiline) {
 		smart_str_appendc(buf, ',');
 		smart_str_appendc(buf, '\n');
@@ -228,7 +234,7 @@ static void var_representation_encode_object_element(zval *zv, zend_ulong index,
 }
 /* }}} */
 
-static void var_representation_encode_array_element(zval *zv, zend_ulong index, zend_string *key, int level, smart_str *buf, zend_bool is_list) /* {{{ */
+static void var_representation_encode_array_element(zval *zv, zend_ulong index, zend_string *key, int level, bool unescaped, smart_str *buf, zend_bool is_list) /* {{{ */
 {
 	zend_bool multiline = level >= 0;
 	if (key == NULL) { /* numeric key */
@@ -246,10 +252,10 @@ static void var_representation_encode_array_element(zval *zv, zend_ulong index, 
 			buffer_append_spaces(buf, level+1);
 		}
 
-		var_representation_string(buf, ZSTR_VAL(key), ZSTR_LEN(key));
+		var_representation_string(buf, ZSTR_VAL(key), ZSTR_LEN(key), unescaped);
 		smart_str_appendl(buf, " => ", 4);
 	}
-	var_representation_ex(zv, multiline ? level + 2 : -1, buf);
+	var_representation_ex_flags(zv, multiline ? level + 2 : -1, unescaped, buf);
 
 	if (multiline) {
 		smart_str_appendc(buf, ',');
@@ -258,7 +264,7 @@ static void var_representation_encode_array_element(zval *zv, zend_ulong index, 
 }
 /* }}} */
 
-VAR_REPRESENTATION_API void var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
+static void var_representation_ex_inner(zval *struc, int level, bool unescaped, smart_str *buf) /* {{{ */
 {
 	HashTable *myht;
 	char tmp_str[PHP_DOUBLE_MAX_LENGTH];
@@ -302,7 +308,7 @@ again:
 			}
 			break;
 		case IS_STRING:
-			var_representation_string(buf, Z_STRVAL_P(struc), Z_STRLEN_P(struc));
+			var_representation_string(buf, Z_STRVAL_P(struc), Z_STRLEN_P(struc), unescaped);
 			break;
 		case IS_ARRAY: {
 			myht = Z_ARRVAL_P(struc);
@@ -344,7 +350,7 @@ again:
 					smart_str_appendc(buf, '\n');
 					first = 0;
 				}
-				var_representation_encode_array_element(val, index, key, level, buf, is_list);
+				var_representation_encode_array_element(val, index, key, level, unescaped, buf, is_list);
 			} ZEND_HASH_FOREACH_END();
 #if PHP_VERSION_ID >= 70300
 			if (!(GC_FLAGS(myht) & GC_IMMUTABLE)) {
@@ -414,7 +420,7 @@ again:
 						smart_str_appendc(buf, '\n');
 						first = 0;
 					}
-					var_representation_encode_object_element(val, index, key, level, buf, is_list);
+					var_representation_encode_object_element(val, index, key, level, unescaped, buf, is_list);
 				} ZEND_HASH_FOREACH_END();
 				GC_TRY_UNPROTECT_RECURSION(myht);
 				zend_release_properties(myht);
@@ -442,6 +448,18 @@ again:
 			smart_str_appendl(buf, "null", 4);
 			break;
 	}
+}
+/* }}} */
+
+ZEND_COLD VAR_REPRESENTATION_API void var_representation_ex_flags(zval *struc, int level, int flags, smart_str *buf) /* {{{ */
+{
+	var_representation_ex_inner(struc, level, flags & VAR_REPRESENTATION_UNESCAPED != 0, buf);
+}
+
+/* }}} */
+ZEND_COLD VAR_REPRESENTATION_API void var_representation_ex(zval *struc, int level, smart_str *buf) /* {{{ */
+{
+	var_representation_ex_inner(struc, level, false, buf);
 }
 /* }}} */
 
@@ -494,8 +512,8 @@ PHP_FUNCTION(var_representation)
 		Z_PARAM_LONG(flags)
 	ZEND_PARSE_PARAMETERS_END();
 
-	var_representation_ex(var, (flags & 1) ? -1 : 1, &buf);
-	smart_str_0 (&buf);
+	var_representation_ex_inner(var, (flags & VAR_REPRESENTATION_SINGLE_LINE) ? -1 : 1, (flags & VAR_REPRESENTATION_UNESCAPED) != 0, &buf);
+	smart_str_0(&buf);
 
 	RETURN_NEW_STR(buf.s);
 }
@@ -505,6 +523,7 @@ PHP_FUNCTION(var_representation)
 PHP_MINIT_FUNCTION(var_representation)
 {
 	REGISTER_LONG_CONSTANT("VAR_REPRESENTATION_SINGLE_LINE", VAR_REPRESENTATION_SINGLE_LINE, CONST_CS|CONST_PERSISTENT);
+	REGISTER_LONG_CONSTANT("VAR_REPRESENTATION_UNESCAPED", VAR_REPRESENTATION_UNESCAPED, CONST_CS|CONST_PERSISTENT);
 	return SUCCESS;
 }
 /* }}} */

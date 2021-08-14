@@ -33,16 +33,30 @@ php > echo var_representation(['a','b']);
   'a',
   'b',
 ]
+
 // can dump everything on one line.
 php > echo var_representation(['a', 'b', 'c'], VAR_REPRESENTATION_SINGLE_LINE);
 ['a', 'b', 'c']
+
 php > echo var_representation("uses double quotes: \$\"'\\\n");
 "uses double quotes: \$\"'\\\n"
+
+// Can disable the escaping of control characters
+// (e.g. if the return value needs to be escaped again)
+php > echo var_representation("has\nnewlines", VAR_REPRESENTATION_UNESCAPED);
+'has
+newlines'
+php > echo json_encode("uses single quotes:\0\r\n\$\"'\\");
+"uses single quotes:\u0000\r\n$\"'\\"
+php > echo json_encode(var_representation("uses single quotes:\0\r\n\$\"'\\",
+                                          VAR_REPRESENTATION_UNESCAPED));
+"'uses single quotes:\u0000\r\n$\"\\'\\\\'"
 ```
 
 ## Documentation
 
 Refer to https://wiki.php.net/rfc/readable_var_representation for details such as what characters are escaped.
+Also see the section [Differences from `var_export`](#differences-from-var_export).
 
 ## Background information
 
@@ -76,3 +90,9 @@ Proposals to add alternatives better to var_export to php itself
   optional parameter `int $flags = 0` accepting a bitmask. If the
   value of $flags includes this flags, `var_representation()` will
   return a single-line representation for arrays/objects.
+- Support the bit flag `VAR_REPRESENTATION_UNESCAPED` to force
+  strings to be single quoted and avoid escaping any control characters other than `'` and `\`
+  (e.g. newlines will not be escaped even with VAR_REPRESENTATION_SINGLE_LINE).
+
+  This may be useful when short representations are needed,
+  or if the return value is escaped again.
