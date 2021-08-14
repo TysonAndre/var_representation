@@ -74,6 +74,7 @@ Proposals to add alternatives better to var_export to php itself
 ## Differences from var_export
 
 - Unconditionally return a string instead of printing to standard output.
+
 - Use `null` instead of `NULL`. The former is recommended by more
   coding guidelines [such as PSR-2](https://www.php-fig.org/psr/psr-2/).
 - Escape control characters including tabs, newlines, etc., unlike
