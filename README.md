@@ -73,13 +73,12 @@ Proposals to add alternatives better to var_export to php itself
 
 ## Differences from var_export
 
-`var_representation` has the following differences from `var_export`
+`var_representation` has the following differences from `var_export`:
 
-- Unconditionally return a string instead of printing to standard output.
-- Use `null` instead of `NULL`. The former is recommended by more
-  coding guidelines [such as PSR-2](https://www.php-fig.org/psr/psr-2/).
-- Escape control characters including tabs, newlines, etc., unlike
-  `var_export()`/`var_dump()`.
+- Escape control characters including tabs, newlines, etc.,
+  unlike `var_export()`/`var_dump()`.
+- Unconditionally return a string instead of printing to standard output.
+- Use `null` instead of `NULL`. The former is recommended by more coding guidelines such as [such as PSR-2](https://www.php-fig.org/psr/psr-2/).
 - Change the way indentation is done for arrays/objects. Always add 2
   spaces for every level of arrays, never 3 in objects, and put the
   array start on the same line as the key for arrays and objects)
