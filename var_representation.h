@@ -28,6 +28,7 @@ struct zval;
 #	define VAR_REPRESENTATION_API /* nothing special */
 #endif
 
+VAR_REPRESENTATION_API void var_representation_ex_flags(zval *struc, int level, int flags, smart_str *buf);
 VAR_REPRESENTATION_API void var_representation_ex(zval *struc, int level, smart_str *buf);
 
 #endif
