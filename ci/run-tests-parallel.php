@@ -3331,7 +3331,7 @@ function clear_show_test()
 
     if (!$workerID) {
         // Write over the last line to avoid random trailing chars on next echo
-        echo str_repeat(" ", $line_length), "\r";
+        echo str_repeat(" ", $line_length ?? 0), "\r";
     }
 }
 
