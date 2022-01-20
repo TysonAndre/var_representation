@@ -2,7 +2,7 @@
 <package packagerversion="1.9.1" version="2.0" xmlns="http://pear.php.net/dtd/package-2.0" xmlns:tasks="http://pear.php.net/dtd/tasks-1.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://pear.php.net/dtd/tasks-1.0 http://pear.php.net/dtd/tasks-1.0.xsd http://pear.php.net/dtd/package-2.0 http://pear.php.net/dtd/package-2.0.xsd">
  <name>var_representation</name>
  <channel>pecl.php.net</channel>
- <summary>var_representation extension</summary>
+ <summary>A compact, more readable alternative to var_export.</summary>
  <description>var_representation is a compact alternative to var_export that properly escapes control characters</description>
  <lead>
   <name>Tyson Andre</name>
