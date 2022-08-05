@@ -86,6 +86,8 @@ Proposals to add alternatives better to var_export to php itself
 - Always render empty lists on a single line instead of two lines.
 - Prepend `\` to class names so that generated code snippets can be
   used in namespaces without any issues.
+
+  (Note: `var_export` also started prepending `\` to class names in php 8.2)
 - Support the bit flag `VAR_REPRESENTATION_SINGLE_LINE=1` in a new
   optional parameter `int $flags = 0` accepting a bitmask. If the
   value of $flags includes this flags, `var_representation()` will
