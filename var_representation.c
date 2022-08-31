@@ -67,6 +67,10 @@ static const int VAR_REPRESENTATION_UNESCAPED = 2;
 #define GC_TRY_PROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount++; } while(0)
 #define GC_TRY_UNPROTECT_RECURSION(myht) do { (myht)->u.v.nApplyCount--; } while(0)
 #define GC_IS_RECURSIVE(myht) ((myht)->u.v.nApplyCount > 0)
+
+#define Z_IS_RECURSIVE_P(struc) (Z_OBJ_APPLY_COUNT_P((struc)) > 0)
+#define Z_PROTECT_RECURSION_P(struc) Z_OBJ_INC_APPLY_COUNT_P((struc))
+#define Z_UNPROTECT_RECURSION_P(struc) Z_OBJ_DEC_APPLY_COUNT_P((struc))
 #endif
 
 static void var_representation_ex_inner(zval *struc, int level, bool unescaped, smart_str *buf);
@@ -383,19 +387,14 @@ again:
 				return;
 			}
 #endif
+			if (Z_IS_RECURSIVE_P(struc)) {
+				smart_str_appendl(buf, "null", 4);
+				zend_error(E_WARNING, "var_representation does not handle circular references");
+				return;
+			}
+			Z_PROTECT_RECURSION_P(struc);
 
 			myht = zend_get_properties_for(struc, ZEND_PROP_PURPOSE_VAR_EXPORT);
-			if (myht) {
-				if (GC_IS_RECURSIVE(myht))
-				{
-					smart_str_appendl(buf, "null", 4);
-					zend_error(E_WARNING, "var_representation does not handle circular references");
-					zend_release_properties(myht);
-					return;
-				} else {
-					GC_TRY_PROTECT_RECURSION(myht);
-				}
-			}
 
 			/* stdClass has no __set_state method, but can be casted to */
 			if (ce == zend_standard_class_def) {
@@ -425,6 +424,9 @@ again:
 				GC_TRY_UNPROTECT_RECURSION(myht);
 				zend_release_properties(myht);
 			}
+
+			Z_UNPROTECT_RECURSION_P(struc);
+
 			if (level > 1 && !first) {
 				buffer_append_spaces(buf, level - 1);
 			}

@@ -13,8 +13,8 @@
  <date>2021-08-14</date>
  <time>16:00:00</time>
  <version>
-  <release>0.1.2dev</release>
-  <api>0.1.2dev</api>
+  <release>0.1.2</release>
+  <api>0.1.2</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,7 +22,10 @@
  </stability>
  <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* TBD
+* Switch from infinite recursion detection on the object's properties to infinite recursion detection on the object itself.
+  This conforms with the change to var_export/debug_zval_dump in php 8.2-dev,
+  and would allow data structures to safely start returning temporary arrays that can be garbage collected to save memory
+  (after dumping the representation) starting in php 8.2+.
  </notes>
  <contents>
   <dir name="/">
@@ -43,6 +46,7 @@
     <file name="004.phpt" role="test" />
     <file name="005.phpt" role="test" />
     <file name="006.phpt" role="test" />
+    <file name="007.phpt" role="test" />
     <file name="dump.inc" role="test" />
     <file name="php81.phpt" role="test" />
    </dir>
