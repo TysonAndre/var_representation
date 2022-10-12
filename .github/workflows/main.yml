@@ -29,6 +29,9 @@ jobs:
          # and the docker image `php:8` is the latest minor version of php 8.x (8.1).
          - PHP_VERSION: '7.2'
            PHP_VERSION_FULL: 7.2.34
+         - PHP_VERSION: '7.2'
+           PHP_VERSION_FULL: 7.2.34
+           DOCKER_ARCHITECTURE: i386
          - PHP_VERSION: '7.3'
            PHP_VERSION_FULL: 7.3.28
          - PHP_VERSION: '7.4'
@@ -37,8 +40,11 @@ jobs:
            PHP_VERSION_FULL: 8.0.22
          - PHP_VERSION: '8.1'
            PHP_VERSION_FULL: 8.1.9
-         - PHP_VERSION: '8.2.0beta3'
-           PHP_VERSION_FULL: 8.2.0beta3
+         - PHP_VERSION: '8.2.0RC3'
+           PHP_VERSION_FULL: 8.2.0RC3
+         - PHP_VERSION: '8.2.0RC3'
+           PHP_VERSION_FULL: 8.2.0RC3
+           DOCKER_ARCHITECTURE: i386
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -47,7 +53,7 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Build and test in docker
-        run: bash ci/test_dockerized.sh ${{ matrix.PHP_VERSION }}
+        run: bash ci/test_dockerized.sh ${{ matrix.PHP_VERSION }} ${{ matrix.DOCKER_ARCHITECTURE }}
 
       # We reuse the php base image because
       # 1. It has any necessary dependencies installed for php 7.0-8.0
@@ -56,6 +62,6 @@ jobs:
       # We need to install valgrind then rebuild php from source with the configure option '--with-valgrind' to avoid valgrind false positives
       # because php-src has inline assembly that causes false positives in valgrind when that option isn't used.
       - name: Build and test in docker again with valgrind
-        run: bash ci/test_dockerized_valgrind.sh ${{ matrix.PHP_VERSION }} ${{ matrix.PHP_VERSION_FULL }}
+        run: bash ci/test_dockerized_valgrind.sh ${{ matrix.PHP_VERSION }} ${{ matrix.PHP_VERSION_FULL }} ${{ matrix.DOCKER_ARCHITECTURE  }}
       # NOTE: tests report false positives for zend_string_equals in php 7.3+
       # due to the use of inline assembly in php-src. (not related to var_representation)
