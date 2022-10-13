@@ -455,7 +455,7 @@ again:
 
 ZEND_COLD VAR_REPRESENTATION_API void var_representation_ex_flags(zval *struc, int level, int flags, smart_str *buf) /* {{{ */
 {
-	var_representation_ex_inner(struc, level, flags & VAR_REPRESENTATION_UNESCAPED != 0, buf);
+	var_representation_ex_inner(struc, level, (flags & VAR_REPRESENTATION_UNESCAPED) != 0, buf);
 }
 
 /* }}} */
