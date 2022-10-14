@@ -259,7 +259,7 @@ static void var_representation_encode_array_element(zval *zv, zend_ulong index, 
 		var_representation_string(buf, ZSTR_VAL(key), ZSTR_LEN(key), unescaped);
 		smart_str_appendl(buf, " => ", 4);
 	}
-	var_representation_ex_flags(zv, multiline ? level + 2 : -1, unescaped, buf);
+	var_representation_ex_inner(zv, multiline ? level + 2 : -1, unescaped, buf);
 
 	if (multiline) {
 		smart_str_appendc(buf, ',');
@@ -455,7 +455,7 @@ again:
 
 ZEND_COLD VAR_REPRESENTATION_API void var_representation_ex_flags(zval *struc, int level, int flags, smart_str *buf) /* {{{ */
 {
-	var_representation_ex_inner(struc, level, flags & VAR_REPRESENTATION_UNESCAPED != 0, buf);
+	var_representation_ex_inner(struc, level, (flags & VAR_REPRESENTATION_UNESCAPED) != 0, buf);
 }
 
 /* }}} */
