@@ -2,11 +2,11 @@
 Test var_representation() function with VAR_REPRESENTATION_UNESCAPED
 --FILE--
 <?php
-function dump($value): void {
+function dump($value, int $innerFlags = VAR_REPRESENTATION_SINGLE_LINE | VAR_REPRESENTATION_UNESCAPED, string $description = 'oneline'): void {
     // VAR_REPRESENTATION_UNESCAPED will always encode strings in single quotes for consistency,
     // even when it contains single quotes.
-    $repr = var_representation(var_representation($value, VAR_REPRESENTATION_SINGLE_LINE | VAR_REPRESENTATION_UNESCAPED));
-    echo "oneline escaped twice: $repr\n";
+    $repr = var_representation(var_representation($value, $innerFlags));
+    echo "$description escaped twice: $repr\n";
 }
 dump(null);
 dump(false);
@@ -21,8 +21,14 @@ dump(new ArrayObject(['a', ['b']]));
 dump("Content-Length: 42\r\n");
 // use octal
 dump(["Foo\0\r\n\r\001\x19test quotes and special characters\$b'\"\\" => "\0"]);
+dump(["Foo\0\r\n\r\001\x19test quotes and special characters\$b'\"\\" => "\0"], VAR_REPRESENTATION_SINGLE_LINE, 'only oneline');
+dump(["Foo\0\r\n\r\001\x19test quotes and special characters\$b'\"\\" => "\0"], VAR_REPRESENTATION_UNESCAPED, 'only unescaped');
+dump(["Foo\0\r\n\r\001\x19test quotes and special characters\$b'\"\\" => "\0"], -1 & ~(VAR_REPRESENTATION_UNESCAPED|VAR_REPRESENTATION_SINGLE_LINE), 'only unrecognized');
 // does not escape or check validity of bytes "\80-\ff" (e.g. utf-8 data)
 dump("▜");
+dump("▜\n", VAR_REPRESENTATION_UNESCAPED, 'unescaped');
+dump("▜\n", VAR_REPRESENTATION_SINGLE_LINE, 'only oneline');
+dump("▜\n", 0, 'no flags');
 dump((object)["Foo\0\r\n\r\001" => true]);
 echo "STDIN is dumped as null, like var_export\n";
 dump(STDIN);
@@ -65,7 +71,13 @@ oneline escaped twice: '[1, 2, 3]'
 oneline escaped twice: '\\ArrayObject::__set_state([\'a\', [\'b\']])'
 oneline escaped twice: "'Content-Length: 42\r\n'"
 oneline escaped twice: "['Foo\x00\r\n\r\x01\x19test quotes and special characters\$b\\'\"\\\\' => '\x00']"
+only oneline escaped twice: '["Foo\\x00\\r\\n\\r\\x01\\x19test quotes and special characters\\$b\'\\"\\\\" => "\\x00"]'
+only unescaped escaped twice: "[\n  'Foo\x00\r\n\r\x01\x19test quotes and special characters\$b\\'\"\\\\' => '\x00',\n]"
+only unrecognized escaped twice: "[\n  \"Foo\\x00\\r\\n\\r\\x01\\x19test quotes and special characters\\\$b'\\\"\\\\\" => \"\\x00\",\n]"
 oneline escaped twice: '\'▜\''
+unescaped escaped twice: "'▜\n'"
+only oneline escaped twice: '"▜\\n"'
+no flags escaped twice: '"▜\\n"'
 oneline escaped twice: "(object) ['Foo\x00\r\n\r\x01' => true]"
 STDIN is dumped as null, like var_export
 
