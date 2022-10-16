@@ -56,5 +56,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: var_representation-${{matrix.version}}-${{matrix.arch}}-${{matrix.ts}}
+          name: var_representation-Windows-DLL-${{matrix.version}}-${{matrix.arch}}-${{matrix.ts}}
           path: .install
