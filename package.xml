@@ -23,7 +23,7 @@
  <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
 * No code changes.
-* Adds steps to build Windows DLLs in CI.
+* Adds steps to build DLLs for Windows in CI.
  </notes>
  <contents>
   <dir name="/">
