@@ -2,9 +2,10 @@ name: Build DLLs
 # Based on https://github.com/krakjoe/apcu
 # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
 # Builds DLLs for 64-bit php.
-# See https://windows.php.net/ - the windows PHP team no longer has access to the machine used to build dlls.
+# See https://windows.php.net/ - At this time, the windows PHP team no longer has access to the machine used to build dlls.
 
 on:
+  # https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#release
   release:
     types: [published]
 
@@ -45,7 +46,7 @@ jobs:
       - name: package
         run: |
           md .install
-          copy COPYING .install
+          copy COPYING README.md .install
           if exist x64 (
             if exist x64\Release (set prefix=x64\Release) else set prefix=x64\Release_TS
           ) else (
@@ -56,5 +57,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: var_representation-Windows-DLL-${{matrix.version}}-${{matrix.arch}}-${{matrix.ts}}
+          name: var_representation-${{github.ref_name}}-Windows-php-${{matrix.version}}-${{matrix.arch}}-${{matrix.ts}}
           path: .install
