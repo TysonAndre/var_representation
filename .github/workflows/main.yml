@@ -37,13 +37,17 @@ jobs:
          - PHP_VERSION: '7.4'
            PHP_VERSION_FULL: 7.4.30
          - PHP_VERSION: '8.0'
-           PHP_VERSION_FULL: 8.0.22
+           PHP_VERSION_FULL: 8.0.27
          - PHP_VERSION: '8.1'
-           PHP_VERSION_FULL: 8.1.9
-         - PHP_VERSION: '8.2.0RC3'
-           PHP_VERSION_FULL: 8.2.0RC3
-         - PHP_VERSION: '8.2.0RC3'
-           PHP_VERSION_FULL: 8.2.0RC3
+           PHP_VERSION_FULL: 8.1.29
+         - PHP_VERSION: '8.2'
+           PHP_VERSION_FULL: 8.2.22
+         - PHP_VERSION: '8.3'
+           PHP_VERSION_FULL: 8.3.10
+         - PHP_VERSION: '8.4.0alpha4'
+           PHP_VERSION_FULL: 8.4.0alpha4
+         - PHP_VERSION: '8.4.0alpha4'
+           PHP_VERSION_FULL: 8.4.0alpha4
            DOCKER_ARCHITECTURE: i386
 
     # Steps represent a sequence of tasks that will be executed as part of the job

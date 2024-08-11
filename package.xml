@@ -10,11 +10,11 @@
   <email>tandre@php.net</email>
   <active>yes</active>
  </lead>
- <date>2022-10-16</date>
+ <date>2024-08-11</date>
  <time>16:00:00</time>
  <version>
-  <release>0.1.4</release>
-  <api>0.1.4</api>
+  <release>0.1.5</release>
+  <api>0.1.5</api>
  </version>
  <stability>
   <release>stable</release>
@@ -22,8 +22,7 @@
  </stability>
  <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
  <notes>
-* No code changes.
-* Adds steps to build DLLs for Windows in CI.
+* Properly use the getters of php 8.4 hooked properties the same way as var_export.
  </notes>
  <contents>
   <dir name="/">
@@ -47,6 +46,7 @@
     <file name="007.phpt" role="test" />
     <file name="dump.inc" role="test" />
     <file name="php81.phpt" role="test" />
+    <file name="php84_property_hook.phpt" role="test" />
    </dir>
   </dir>
  </contents>
@@ -63,6 +63,23 @@
  <providesextension>var_representation</providesextension>
  <extsrcrelease />
  <changelog>
+  <release>
+   <date>2022-10-16</date>
+   <time>16:00:00</time>
+   <version>
+    <release>0.1.4</release>
+    <api>0.1.4</api>
+   </version>
+   <stability>
+    <release>stable</release>
+    <api>stable</api>
+   </stability>
+   <license uri="https://github.com/TysonAndre/var_representation/blob/main/COPYING">BSD-3-Clause</license>
+   <notes>
+* No code changes.
+* Adds steps to build DLLs for Windows in CI.
+   </notes>
+  </release>
   <release>
    <date>2022-10-14</date>
    <time>16:00:00</time>

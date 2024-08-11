@@ -15,17 +15,18 @@ jobs:
       run:
         shell: cmd
     strategy:
+      fail-fast: false
       matrix:
-          version: ["7.2", "7.3", "7.4", "8.0", "8.1", "8.2"]
+          version: ["7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
           arch: [x64]
           ts: [nts, ts]
-    runs-on: windows-latest
+    runs-on: windows-2019
     steps:
       - name: Checkout var_representation
         uses: actions/checkout@v3
       - name: Setup PHP
         id: setup-php
-        uses: cmb69/setup-php-sdk@v0.6
+        uses: php/setup-php-sdk@v0.9
         with:
           version: ${{matrix.version}}
           arch: ${{matrix.arch}}
