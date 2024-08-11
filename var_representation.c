@@ -215,6 +215,7 @@ static void var_representation_encode_object_element(zval *zv, zend_ulong index,
 	if (multiline) {
 		buffer_append_spaces(buf, level + 1);
 	}
+
 	if (is_list) {
 		ZEND_ASSERT(!key);
 	} else {
@@ -409,6 +410,25 @@ again:
 			if (myht) {
 				is_list = var_representation_array_is_list(myht);
 				ZEND_HASH_FOREACH_KEY_VAL_IND(myht, index, key, val) {
+#if PHP_VERSION_ID >= 80400
+					zval tmp;
+					if (UNEXPECTED(Z_TYPE_P(val) == IS_PTR)) {
+						zend_property_info *prop_info = Z_PTR_P(val);
+						if (!(prop_info->flags & ZEND_ACC_VIRTUAL) || prop_info->hooks[ZEND_PROPERTY_HOOK_GET]) {
+							const char *unmangled_name_cstr = zend_get_unmangled_property_name(prop_info->name);
+							zend_string *unmangled_name = zend_string_init(unmangled_name_cstr, strlen(unmangled_name_cstr), false);
+							val = zend_read_property_ex(prop_info->ce, Z_OBJ_P(struc), unmangled_name, /* silent */ true, &tmp);
+							zend_string_release_ex(unmangled_name, false);
+							if (EG(exception)) {
+								return;
+							}
+						} else {
+							/* Skip virtual properties with no getters */
+							continue;
+						}
+					}
+#endif
+
 					if (level < 0) {
 						if (first) {
 							first = 0;
@@ -420,6 +440,11 @@ again:
 						first = 0;
 					}
 					var_representation_encode_object_element(val, index, key, level, unescaped, buf, is_list);
+#if PHP_VERSION_ID >= 80400
+					if (UNEXPECTED(val == &tmp)) {
+						zval_ptr_dtor(val);
+					}
+#endif
 				} ZEND_HASH_FOREACH_END();
 				GC_TRY_UNPROTECT_RECURSION(myht);
 				zend_release_properties(myht);
@@ -441,6 +466,11 @@ again:
 		case IS_REFERENCE:
 			struc = Z_REFVAL_P(struc);
 			goto again;
+			break;
+		case IS_PTR:
+			zend_error(E_WARNING, "var_representation does not handle unexpected pointers");
+			ZEND_ASSERT(0);
+			smart_str_appendl(buf, "null", 4);
 			break;
 		case IS_RESOURCE:
 			zend_error(E_WARNING, "var_representation does not handle resources");
