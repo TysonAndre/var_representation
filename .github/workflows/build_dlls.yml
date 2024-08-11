@@ -17,10 +17,20 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-          version: ["7.2", "7.3", "7.4", "8.0", "8.1", "8.2", "8.3", "8.4"]
+          version:
+          # 7.2 and 7.3 currently fail due to https://github.com/php/setup-php-sdk/issues/10
+          - { os: windows-2019, php: "7.2" }
+          - { os: windows-2019, php: "7.3" }
+          - { os: windows-2019, php: "7.4" }
+          - { os: windows-2022, php: "8.0" }
+          - { os: windows-2022, php: "8.1" }
+          - { os: windows-2022, php: "8.2" }
+          - { os: windows-2022, php: "8.3" }
+          - { os: windows-2022, php: "8.4" }
           arch: [x64]
           ts: [nts, ts]
-    runs-on: windows-2019
+    # https://github.com/php/setup-php-sdk?tab=readme-ov-file#inputs
+    runs-on: ${{matrix.version.os}}
     steps:
       - name: Checkout var_representation
         uses: actions/checkout@v3
@@ -28,7 +38,7 @@ jobs:
         id: setup-php
         uses: php/setup-php-sdk@v0.9
         with:
-          version: ${{matrix.version}}
+          version: ${{matrix.version.php}}
           arch: ${{matrix.arch}}
           ts: ${{matrix.ts}}
       - name: Enable Developer Command Prompt
@@ -58,5 +68,5 @@ jobs:
       - name: Upload artifacts
         uses: actions/upload-artifact@v3.1.0
         with:
-          name: var_representation-${{github.ref_name}}-Windows-php-${{matrix.version}}-${{matrix.arch}}-${{matrix.ts}}
+          name: var_representation-${{github.ref_name}}-Windows-php-${{matrix.version.php}}-${{matrix.arch}}-${{matrix.ts}}
           path: .install
